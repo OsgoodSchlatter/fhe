@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "tfhe_io.h": "c"
+    }
+}
