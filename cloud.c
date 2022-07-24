@@ -152,6 +152,39 @@ void minimum(LweSample *result, const LweSample *a, const LweSample *b, const in
     delete_gate_bootstrapping_ciphertext_array(2, tmps);
 }
 
+LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
+{
+    LweSample *out0 = new_gate_bootstrapping_ciphertext_array(4, bk->params);
+
+    LweSample *temp0 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+    LweSample *temp1 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+    LweSample *temp2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+    LweSample *temp3 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+
+    // out0
+    bootsAND(&out0[0], &a[0], &b[0], bk);
+
+    // Pre out1
+    bootsAND(&temp0[0], &a[0], &b[1], bk);
+    bootsAND(&temp1[0], &a[1], &b[0], bk);
+    // out1
+    bootsXOR(&out0[1], &temp0[0], &temp1[0], bk);
+
+    // Pre out2 & out3
+    bootsAND(&temp2[0], &temp0[0], &temp1[0], bk);
+
+    bootsAND(&temp3[0], &a[1], &b[1], bk);
+    // out2
+    bootsXOR(&out0[2], &temp2[0], &temp3[0], bk);
+    // out3
+    bootsAND(&out0[3], &temp3[0], &temp2[0], bk);
+
+    for (int i = 0; i < 4; i++)
+    {
+        bootsCOPY(&result[i], &out0[i], bk);
+    }
+}
+
 int main()
 {
 
@@ -188,7 +221,8 @@ int main()
     LweSample *result = new_gate_bootstrapping_ciphertext_array(16, params);
     time_t start_time = clock();
     // addition_multiple(result, ciphertexts, numInputs, 16, bk);
-    substraction_multiple(result, ciphertexts, numInputs, 16, bk);
+    // substraction_multiple(result, ciphertexts, numInputs, 16, bk);
+    mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
     time_t end_time = clock();
 
     printf("......computation of the 16 binary + 32 mux gates took: %ld microsecs\n", end_time - start_time);
