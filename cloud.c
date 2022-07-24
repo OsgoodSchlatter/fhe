@@ -152,6 +152,7 @@ void minimum(LweSample *result, const LweSample *a, const LweSample *b, const in
     delete_gate_bootstrapping_ciphertext_array(2, tmps);
 }
 
+// a1,a0 * b1,b0
 LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
 {
     LweSample *out0 = new_gate_bootstrapping_ciphertext_array(4, bk->params);
@@ -183,6 +184,40 @@ LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bit
     {
         bootsCOPY(&result[i], &out0[i], bk);
     }
+}
+
+// a1,a0 *b0
+
+LweSample *mult(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
+{
+}
+
+/***
+ * Enables user to choose one bit
+ * @arg result: deciphered version of a
+ * @arg a: ciphered input
+ * @arg index: the bit user wants to check
+ *
+ *
+ * @return 2^index or 0 depending wether the input contains this bit
+ * ***/
+LweSample *test(LweSample *result, LweSample *a, int index, const TFheGateBootstrappingCloudKeySet *bk)
+{
+    LweSample *zero = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+    bootsCONSTANT(zero, 0, bk);
+    for (int i = 0; i < 16; i++)
+    {
+        if (i == index)
+        {
+            bootsCOPY(&result[i], &a[i], bk);
+        }
+        else
+        {
+            bootsCOPY(&result[i], &zero[i], bk);
+        }
+    }
+
+    bootsCOPY(&result[index], &a[index], bk);
 }
 
 int main()
@@ -222,7 +257,8 @@ int main()
     time_t start_time = clock();
     // addition_multiple(result, ciphertexts, numInputs, 16, bk);
     // substraction_multiple(result, ciphertexts, numInputs, 16, bk);
-    mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
+    // mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
+    test(result, ciphertexts[0], 5, bk);
     time_t end_time = clock();
 
     printf("......computation of the 16 binary + 32 mux gates took: %ld microsecs\n", end_time - start_time);
