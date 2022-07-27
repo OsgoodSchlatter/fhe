@@ -94,6 +94,7 @@ LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNb
     {
         bootsCOPY(&result[i], &tmp[i], bk);
     }
+    return (result);
 }
 
 /***
@@ -186,10 +187,45 @@ LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bit
     }
 }
 
-// a1,a0 *b0
-
-LweSample *mult(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
+LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk)
 {
+    LweSample *offsetArray = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+    for (int i = 0; i < offset; i++)
+    {
+        bootsCONSTANT(&offsetArray[i], 0, bk);
+    }
+
+    for (int i = 0; i < 16 - offset; i++)
+    {
+        bootsCOPY(&offsetArray[i + offset], &input[i], bk);
+    }
+
+    for (int i = 0; i < 16; i++)
+    {
+        bootsCOPY(&result[i], &offsetArray[i], bk);
+    }
+}
+
+LweSample *mult_large_inputs(LweSample *result, LweSample *offers[], int offerNbr, const TFheGateBootstrappingCloudKeySet *bk)
+{
+    LweSample *final_array[2];
+    final_array[0] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+    final_array[1] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+    LweSample *offersHalf = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+    LweSample *offersHalf2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
+
+    for (int i = 0; i < 2; i++)
+    {
+        bootsCOPY(&offersHalf[i], &offers[1][i], bk);
+        bootsCOPY(&offersHalf2[i], &offers[1][i + 2], bk);
+    }
+
+    mult_2_bits(final_array[0], offers[0], offersHalf, 16, bk);
+    mult_2_bits(final_array[1], offers[0], offersHalf2, 16, bk);
+
+    offset(final_array[1], final_array[1], 2, bk);
+
+    addition_multiple(result, final_array, 2, 16, bk);
 }
 
 /***
@@ -242,7 +278,6 @@ int main()
     FILE *cloud_data = fopen("cloud.data", "rb");
 
     LweSample *ciphertexts[numInputs];
-
     for (int i = 0; i < numInputs; i++)
     {
         ciphertexts[i] = new_gate_bootstrapping_ciphertext_array(16, params);
@@ -258,7 +293,9 @@ int main()
     // addition_multiple(result, ciphertexts, numInputs, 16, bk);
     // substraction_multiple(result, ciphertexts, numInputs, 16, bk);
     // mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
-    test(result, ciphertexts[0], 5, bk);
+    // test(result, ciphertexts[0], 5, bk);
+    mult_large_inputs(result, ciphertexts, 2, bk);
+    // offset(result, ciphertexts[0], 2, bk);
     time_t end_time = clock();
 
     printf("......computation of the 16 binary + 32 mux gates took: %ld microsecs\n", end_time - start_time);
