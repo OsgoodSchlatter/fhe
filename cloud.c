@@ -3,6 +3,34 @@
 #include <stdio.h>
 #include <time.h>
 
+/***
+ * Enables user to choose one bit
+ * @arg result: deciphered version of a
+ * @arg a: ciphered input
+ * @arg index: the bit user wants to check
+ *
+ *
+ * @return 2^index or 0 depending wether the input contains this bit
+ * ***/
+LweSample *test(LweSample *result, LweSample *a, int index, const TFheGateBootstrappingCloudKeySet *bk)
+{
+    LweSample *zero = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+    bootsCONSTANT(zero, 0, bk);
+    for (int i = 0; i < 16; i++)
+    {
+        if (i == index)
+        {
+            bootsCOPY(&result[i], &a[i], bk);
+        }
+        else
+        {
+            bootsCOPY(&result[i], &zero[i], bk);
+        }
+    }
+
+    bootsCOPY(&result[index], &a[index], bk);
+}
+
 // performs addition on two ciphered data
 void full_adder(LweSample *sum, const LweSample *x, const LweSample *y, const int32_t nb_bits,
                 const TFheGateBootstrappingCloudKeySet *keyset)
@@ -10,7 +38,7 @@ void full_adder(LweSample *sum, const LweSample *x, const LweSample *y, const in
     const LweParams *in_out_params = keyset->params->in_out_params;
     // carries
     LweSample *carry = new_LweSample_array(2, in_out_params);
-    // bootsSymEncrypt(carry, 0, keyset); // first carry initialized to 0
+    // first carry initialized to 0
     bootsCONSTANT(carry, 0, keyset);
     LweSample *temp = new_LweSample_array(3, in_out_params);
 
@@ -79,7 +107,6 @@ void full_substract(LweSample *sum, const LweSample *x, const LweSample *y, cons
 LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNbr, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
 {
     LweSample *tmp = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-
     full_adder(tmp, offers[0], offers[1], 16, bk);
 
     for (int index = 2; index < offerNbr; index++)
@@ -94,7 +121,6 @@ LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNb
     {
         bootsCOPY(&result[i], &tmp[i], bk);
     }
-    return (result);
 }
 
 /***
@@ -211,6 +237,7 @@ LweSample *mult_large_inputs(LweSample *result, LweSample *offers[], int offerNb
     LweSample *final_array[2];
     final_array[0] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
     final_array[1] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
+
     LweSample *offersHalf = new_gate_bootstrapping_ciphertext_array(2, bk->params);
     LweSample *offersHalf2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
 
@@ -222,38 +249,9 @@ LweSample *mult_large_inputs(LweSample *result, LweSample *offers[], int offerNb
 
     mult_2_bits(final_array[0], offers[0], offersHalf, 16, bk);
     mult_2_bits(final_array[1], offers[0], offersHalf2, 16, bk);
-
     offset(final_array[1], final_array[1], 2, bk);
 
-    addition_multiple(result, final_array, 2, 16, bk);
-}
-
-/***
- * Enables user to choose one bit
- * @arg result: deciphered version of a
- * @arg a: ciphered input
- * @arg index: the bit user wants to check
- *
- *
- * @return 2^index or 0 depending wether the input contains this bit
- * ***/
-LweSample *test(LweSample *result, LweSample *a, int index, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *zero = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    bootsCONSTANT(zero, 0, bk);
-    for (int i = 0; i < 16; i++)
-    {
-        if (i == index)
-        {
-            bootsCOPY(&result[i], &a[i], bk);
-        }
-        else
-        {
-            bootsCOPY(&result[i], &zero[i], bk);
-        }
-    }
-
-    bootsCOPY(&result[index], &a[index], bk);
+    full_adder(result, final_array[0], final_array[1], 16, bk);
 }
 
 int main()
@@ -294,8 +292,8 @@ int main()
     // substraction_multiple(result, ciphertexts, numInputs, 16, bk);
     // mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
     // test(result, ciphertexts[0], 5, bk);
-    mult_large_inputs(result, ciphertexts, 2, bk);
     // offset(result, ciphertexts[0], 2, bk);
+    mult_large_inputs(result, ciphertexts, 2, bk);
     time_t end_time = clock();
 
     printf("......computation of the 16 binary + 32 mux gates took: %ld microsecs\n", end_time - start_time);
