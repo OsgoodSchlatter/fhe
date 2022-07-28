@@ -107,7 +107,7 @@ void full_substract(LweSample *sum, const LweSample *x, const LweSample *y, cons
 LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNbr, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
 {
     LweSample *tmp = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    full_adder(tmp, offers[0], offers[1], 16, bk);
+    full_adder(tmp, offers[1], offers[0], nb_bits, bk);
 
     for (int index = 2; index < offerNbr; index++)
     {
@@ -115,7 +115,7 @@ LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNb
         {
             bootsCOPY(&result[j], &tmp[j], bk);
         }
-        full_adder(tmp, result, offers[index], 16, bk);
+        full_adder(tmp, result, offers[index], nb_bits, bk);
     }
     for (int i = 0; i < nb_bits; i++)
     {
@@ -167,7 +167,7 @@ void minimum(LweSample *result, const LweSample *a, const LweSample *b, const in
     // run the elementary comparator gate n times
     for (int i = 0; i < nb_bits; i++)
     {
-        compare_bit(&tmps[0], &a[i], &b[i], &tmps[0], &tmps[1], bk);
+        compare_bit(&tmps[0], &b[i], &a[i], &tmps[0], &tmps[1], bk);
     }
     // tmps[0] is the result of the comparaison: 0 if a is larger, 1 if b is larger
     // select the max and copy it to the result
@@ -251,7 +251,14 @@ LweSample *mult_large_inputs(LweSample *result, LweSample *offers[], int offerNb
     mult_2_bits(final_array[1], offers[0], offersHalf2, 16, bk);
     offset(final_array[1], final_array[1], 2, bk);
 
-    full_adder(result, final_array[0], final_array[1], 16, bk);
+    for (int i = 0; i < 16; i++)
+    {
+        /* code */
+        bootsCOPY(&result[i], &final_array[1][i], bk);
+    }
+    // code works below and doesnt beyond that line
+
+    addition_multiple(result, final_array, 2, 4, bk);
 }
 
 int main()
