@@ -4,261 +4,33 @@
 #include <time.h>
 
 /***
- * Enables user to choose one bit
- * @arg result: deciphered version of a
- * @arg a: ciphered input
- * @arg index: the bit user wants to check
+ * completes the truth table of three inputs (a,b,c_in)
+ * helpful in multiplier
+ * serves as a half adder if c_in=0
+ * @arg out: data that will be deciphered
+ * @arg a: bit 1
+ * @arg b: bit 2
+ * @arg carry_in: carry_in bit
  *
- *
- * @return 2^index or 0 depending wether the input contains this bit
+ * @return sum and carry_out
  * ***/
-LweSample *test(LweSample *result, LweSample *a, int index, const TFheGateBootstrappingCloudKeySet *bk)
+LweSample *full_adder_one_bit(LweSample *out, LweSample *a, LweSample *b, LweSample *carry_in, const TFheGateBootstrappingCloudKeySet *bk)
 {
-    LweSample *zero = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    bootsCONSTANT(zero, 0, bk);
-    for (int i = 0; i < 16; i++)
-    {
-        if (i == index)
-        {
-            bootsCOPY(&result[i], &a[i], bk);
-        }
-        else
-        {
-            bootsCOPY(&result[i], &zero[i], bk);
-        }
-    }
 
-    bootsCOPY(&result[index], &a[index], bk);
-}
-
-// performs addition on two ciphered data
-void full_adder(LweSample *sum, const LweSample *x, const LweSample *y, const int32_t nb_bits,
-                const TFheGateBootstrappingCloudKeySet *keyset)
-{
-    const LweParams *in_out_params = keyset->params->in_out_params;
-    // carries
-    LweSample *carry = new_LweSample_array(2, in_out_params);
-    // first carry initialized to 0
-    bootsCONSTANT(carry, 0, keyset);
+    const LweParams *in_out_params = bk->params->in_out_params;
+    // carries & result & temp
+    LweSample *carry_out = new_LweSample(in_out_params);
+    LweSample *result = new_LweSample(in_out_params);
     LweSample *temp = new_LweSample_array(3, in_out_params);
+    // layer 1
+    bootsXOR(temp, a, b, bk);
+    bootsAND(temp + 1, a, b, bk);
+    // layer 2
+    bootsXOR(result, carry_in, temp, bk);
+    bootsAND(temp + 2, carry_in, temp, bk);
+    bootsOR(carry_out, temp + 1, temp + 2, bk);
 
-    for (int32_t i = 0; i < nb_bits; ++i)
-    {
-        // sumi = xi XOR yi XOR carry(i-1)
-        bootsXOR(temp, x + i, y + i, keyset); // temp = xi XOR yi
-        bootsXOR(sum + i, temp, carry, keyset);
-
-        // carry = (xi AND yi) XOR (carry(i-1) AND (xi XOR yi))
-        bootsAND(temp + 1, x + i, y + i, keyset); // temp1 = xi AND yi
-        bootsAND(temp + 2, carry, temp, keyset);  // temp2 = carry AND temp
-        bootsXOR(carry + 1, temp + 1, temp + 2, keyset);
-        bootsCOPY(carry, carry + 1, keyset);
-    }
-    bootsCOPY(sum, carry, keyset);
-
-    delete_LweSample_array(3, temp);
-    delete_LweSample_array(2, carry);
-}
-
-// performs substraction on two ciphered data
-
-void full_substract(LweSample *sum, const LweSample *x, const LweSample *y, const int32_t nb_bits,
-                    const TFheGateBootstrappingCloudKeySet *keyset)
-{
-    const LweParams *in_out_params = keyset->params->in_out_params;
-    // carries
-    LweSample *carry = new_LweSample_array(2, in_out_params);
-    // bootsSymEncrypt(carry, 0, keyset); // first carry initialized to 0
-    bootsCONSTANT(carry, 0, keyset);
-    LweSample *temp = new_LweSample_array(3, in_out_params);
-
-    LweSample *not_x = new_LweSample_array(4, in_out_params);
-    LweSample *not_temp = new_LweSample_array(3, in_out_params);
-
-    for (int32_t i = 0; i < nb_bits; ++i)
-    {
-        // sumi = xi XOR yi XOR carry(i-1)
-        bootsXOR(temp, x + i, y + i, keyset); // temp = xi XOR yi
-        bootsXOR(sum + i, temp, carry, keyset);
-
-        // carry = (xi AND yi) XOR (carry(i-1) AND (xi XOR yi))
-
-        bootsNOT(not_x, x + i, keyset);
-        bootsNOT(not_temp, temp, keyset);
-
-        bootsAND(temp + 1, not_x, y + i, keyset);    // temp1 = xi AND yi
-        bootsAND(temp + 2, carry, not_temp, keyset); // temp2 = carry AND temp
-        bootsXOR(carry + 1, temp + 1, temp + 2, keyset);
-        bootsCOPY(carry, carry + 1, keyset);
-    }
-    bootsCOPY(sum, carry, keyset);
-
-    delete_LweSample_array(3, temp);
-    delete_LweSample_array(2, carry);
-}
-
-/***
- * Adds 2 or more ciphered offers
- * @arg offers: vector of FHE offers
- * @arg offerNbr: the number of offers
- *
- * @return encrypted result
- * ***/
-LweSample *addition_multiple(LweSample *result, LweSample *offers[], int offerNbr, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *tmp = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    full_adder(tmp, offers[1], offers[0], nb_bits, bk);
-
-    for (int index = 2; index < offerNbr; index++)
-    {
-        for (int j = 0; j < nb_bits; j++)
-        {
-            bootsCOPY(&result[j], &tmp[j], bk);
-        }
-        full_adder(tmp, result, offers[index], nb_bits, bk);
-    }
-    for (int i = 0; i < nb_bits; i++)
-    {
-        bootsCOPY(&result[i], &tmp[i], bk);
-    }
-}
-
-/***
- * Substracts 2 or more ciphered offers
- * see [1] in function for further details
- * @arg offers: vector of FHE offers
- * @arg offerNbr: the number of offers
- *
- *
- * @return encrypted result
- * ***/
-LweSample *substraction_multiple(LweSample *result, LweSample *offers[], int offerNbr, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *tmp = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-
-    full_substract(tmp, offers[0], offers[1], 16, bk);
-
-    for (int index = 2; index < offerNbr; index++)
-    {
-        for (int j = 0; j < nb_bits; j++)
-        {
-            bootsCOPY(&result[j], &tmp[j], bk);
-        }
-        full_substract(tmp, result, offers[index], 16, bk);
-    }
-    for (int i = 0; i < nb_bits; i++)
-    {
-        bootsCOPY(&result[i], &tmp[i], bk);
-    }
-}
-
-void compare_bit(LweSample *result, const LweSample *a, const LweSample *b, const LweSample *lsb_carry, LweSample *tmp, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    bootsXNOR(tmp, a, b, bk);
-    bootsMUX(result, tmp, lsb_carry, a, bk);
-}
-
-void minimum(LweSample *result, const LweSample *a, const LweSample *b, const int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *tmps = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-
-    // initialize the carry to 0
-    bootsCONSTANT(&tmps[0], 0, bk);
-    // run the elementary comparator gate n times
-    for (int i = 0; i < nb_bits; i++)
-    {
-        compare_bit(&tmps[0], &b[i], &a[i], &tmps[0], &tmps[1], bk);
-    }
-    // tmps[0] is the result of the comparaison: 0 if a is larger, 1 if b is larger
-    // select the max and copy it to the result
-    for (int i = 0; i < nb_bits; i++)
-    {
-        bootsMUX(&result[i], &tmps[0], &b[i], &a[i], bk);
-    }
-
-    delete_gate_bootstrapping_ciphertext_array(2, tmps);
-}
-
-// a1,a0 * b1,b0
-LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *out0 = new_gate_bootstrapping_ciphertext_array(4, bk->params);
-
-    LweSample *temp0 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp1 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp3 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-
-    // out0
-    bootsAND(&out0[0], &a[0], &b[0], bk);
-
-    // Pre out1
-    bootsAND(&temp0[0], &a[0], &b[1], bk);
-    bootsAND(&temp1[0], &a[1], &b[0], bk);
-    // out1
-    bootsXOR(&out0[1], &temp0[0], &temp1[0], bk);
-
-    // Pre out2 & out3
-    bootsAND(&temp2[0], &temp0[0], &temp1[0], bk);
-
-    bootsAND(&temp3[0], &a[1], &b[1], bk);
-    // out2
-    bootsXOR(&out0[2], &temp2[0], &temp3[0], bk);
-    // out3
-    bootsAND(&out0[3], &temp3[0], &temp2[0], bk);
-
-    for (int i = 0; i < 4; i++)
-    {
-        bootsCOPY(&result[i], &out0[i], bk);
-    }
-}
-
-LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *offsetArray = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    for (int i = 0; i < offset; i++)
-    {
-        bootsCONSTANT(&offsetArray[i], 0, bk);
-    }
-
-    for (int i = 0; i < 16 - offset; i++)
-    {
-        bootsCOPY(&offsetArray[i + offset], &input[i], bk);
-    }
-
-    for (int i = 0; i < 16; i++)
-    {
-        bootsCOPY(&result[i], &offsetArray[i], bk);
-    }
-}
-
-LweSample *mult_large_inputs(LweSample *result, LweSample *offers[], int offerNbr, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *final_array[2];
-    final_array[0] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    final_array[1] = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-
-    LweSample *offersHalf = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *offersHalf2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-
-    for (int i = 0; i < 2; i++)
-    {
-        bootsCOPY(&offersHalf[i], &offers[1][i], bk);
-        bootsCOPY(&offersHalf2[i], &offers[1][i + 2], bk);
-    }
-
-    mult_2_bits(final_array[0], offers[0], offersHalf, 16, bk);
-    mult_2_bits(final_array[1], offers[0], offersHalf2, 16, bk);
-    offset(final_array[1], final_array[1], 2, bk);
-
-    for (int i = 0; i < 16; i++)
-    {
-        /* code */
-        bootsCOPY(&result[i], &final_array[1][i], bk);
-    }
-    // code works below and doesnt beyond that line
-
-    addition_multiple(result, final_array, 2, 4, bk);
+    return (result, carry_out);
 }
 
 int main()
@@ -295,16 +67,12 @@ int main()
     // do some operations on the ciphertexts
     LweSample *result = new_gate_bootstrapping_ciphertext_array(16, params);
     time_t start_time = clock();
-    // addition_multiple(result, ciphertexts, numInputs, 16, bk);
-    // substraction_multiple(result, ciphertexts, numInputs, 16, bk);
-    // mult_2_bits(result, ciphertexts[0], ciphertexts[1], 16, bk);
-    // test(result, ciphertexts[0], 5, bk);
-    // offset(result, ciphertexts[0], 2, bk);
-    mult_large_inputs(result, ciphertexts, 2, bk);
+
+    // ----------------------------------------- //
+    full_adder_one_bit(result, ciphertexts[0], ciphertexts[1], ciphertexts[2], bk);
     time_t end_time = clock();
 
     printf("......computation of the 16 binary + 32 mux gates took: %ld microsecs\n", end_time - start_time);
-
     printf("writing the answer to file...\n");
 
     // export the 32 ciphertexts to a file (for the cloud)
