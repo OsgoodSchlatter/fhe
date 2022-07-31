@@ -10,6 +10,32 @@ LweSample *copy(LweSample *result, LweSample *input, int size, const TFheGateBoo
         bootsCOPY(&result[i], &input[i], bk);
     }
 }
+
+/***
+ * completes the truth table of three inputs (a,b,c_in)
+ * helpful in multiplier
+ * serves as a half adder if c_in=0
+ * @arg sum: sum of two bits
+ * @arg a: bit 1
+ * @arg b: bit 2
+ * @arg carry_in: carry_in bit that will be turned into carry_out. Then, it will be carry_in for next full_adder
+ *
+ * ***/
+void full_adder_one_bit(LweSample *sum, LweSample *a, LweSample *b, LweSample *carry_in, const TFheGateBootstrappingCloudKeySet *bk)
+{
+
+    const LweParams *in_out_params = bk->params->in_out_params;
+    // carries & result & temp
+    LweSample *temp = new_LweSample_array(3, in_out_params);
+    // layer 1
+    bootsXOR(temp, a, b, bk);
+    bootsAND(temp + 1, a, b, bk);
+    // layer 2
+    bootsXOR(sum, carry_in, temp, bk);
+    bootsAND(temp + 2, carry_in, temp, bk);
+    bootsOR(carry_in, temp + 1, temp + 2, bk);
+}
+
 /***
  * Enables user to choose one bit
  * @arg result: deciphered version of a
@@ -203,40 +229,6 @@ void minimum(LweSample *result, const LweSample *a, const LweSample *b, const in
     delete_gate_bootstrapping_ciphertext_array(2, tmps);
 }
 
-// a1,a0 * b1,b0
-LweSample *mult_2_bits(LweSample *result, LweSample *a, LweSample *b, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *out0 = new_gate_bootstrapping_ciphertext_array(4, bk->params);
-
-    LweSample *temp0 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp1 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp2 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-    LweSample *temp3 = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-
-    // out0
-    bootsAND(&out0[0], &a[0], &b[0], bk);
-
-    // Pre out1
-    bootsAND(&temp0[0], &a[0], &b[1], bk);
-    bootsAND(&temp1[0], &a[1], &b[0], bk);
-    // out1
-    bootsXOR(&out0[1], &temp0[0], &temp1[0], bk);
-
-    // Pre out2 & out3
-    bootsAND(&temp2[0], &temp0[0], &temp1[0], bk);
-
-    bootsAND(&temp3[0], &a[1], &b[1], bk);
-    // out2
-    bootsXOR(&out0[2], &temp2[0], &temp3[0], bk);
-    // out3
-    bootsAND(&out0[3], &temp3[0], &temp2[0], bk);
-
-    for (int i = 0; i < 4; i++)
-    {
-        bootsCOPY(&result[i], &out0[i], bk);
-    }
-}
-
 LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk)
 {
     LweSample *offsetArray = new_gate_bootstrapping_ciphertext_array(16, bk->params);
@@ -256,45 +248,55 @@ LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGat
     }
 }
 
-// if a / b then a = offersHalf and b = offersDivHalf
-LweSample *mult_4_bits(LweSample *result, LweSample *offers[], int offerNbr, const TFheGateBootstrappingCloudKeySet *bk)
+/***
+ * can perform multiplication to 2 digits of 4 bits max (max = 15*15 = 225)
+ * @arg result: result that will be deciphered
+ * @arg a: input 1
+ * @arg b: input 2
+ * @arg bk: keys
+ *
+ * @return encrypted result
+ * ***/
+LweSample *multiplier_4_bits(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
 {
-    // result
-    LweSample *final_array[8];
-    for (int i = 0; i < 8; i++)
-    {
-        final_array[i] = new_gate_bootstrapping_ciphertext_array(16, bk);
-    }
-
-    // operand A and B
-    LweSample *operA[4];
-    LweSample *operB[4];
+    // final array containing the result (8 bits max)
+    LweSample *z = new_LweSample_array(8, bk->params->in_out_params);
+    // temp values [4,4]
+    LweSample *temp[4];
     for (int i = 0; i < 4; i++)
     {
-        operA[i] = new_gate_bootstrapping_ciphertext_array(16, bk);
-        operB[i] = new_gate_bootstrapping_ciphertext_array(16, bk);
+        temp[i] = new_LweSample_array(4, bk->params->in_out_params);
     }
+    // if we want to factorise operations, we might want to create an array of 3. (layer 1, 2, 3)
+    LweSample *carry = new_LweSample_array(4, bk->params->in_out_params);
 
-    // temps
-    LweSample *temps[4][4];
+    // first carry initialised to 0
+    for (int i = 0; i < 4; i++)
+        bootsCONSTANT(carry + i, 0, bk);
+
+    // computing each AND gate
     for (int line = 0; line < 4; line++)
-    {
-        for (int row = 0; row < 4; row++)
-        {
-            temps[line][row] = new_gate_bootstrapping_ciphertext_array(16, bk);
-            bootsAND(temps[line][row], &operA[line][row], &operB[line][row], bk);
-        }
-    }
+        for (int i = 0; i < 4; i++)
+            bootsAND(temp[line] + i, a + i, b + line, bk);
 
-    // >>> result[0]
-    bootsCOPY(final_array[0], temps[0][0], bk);
+    // copying first 4 gates so that it can be looped afterwards
+    for (int i = 0; i < 4; i++)
+        bootsCOPY(z + i, &temp[0][i], bk);
 
-    // line operB=1
+    // processing main calcul
     for (int i = 0; i < 3; i++)
     {
-        full_adder(&temps[2][i], &temps[0][i + 1], &temps[1][i], 16, bk);
-        // full_adder_with_carries
+        bootsCOPY(z + i + 4, carry + i, bk);
+        for (int k = 0; k < 4; k++)
+            full_adder_one_bit(z + k + i + 1, &temp[i + 1][k], z + k + i + 1, carry + i + 1, bk);
     }
+
+    // cant fit int the loop
+    bootsCOPY(z + 7, carry + 3, bk);
+
+    // copying into result
+    for (int i = 0; i < 8; i++)
+        bootsCOPY(&result[i], z + i, bk);
 }
 
 int main()
