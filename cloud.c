@@ -32,53 +32,43 @@ void full_adder_one_bit(LweSample *sum, LweSample *a, LweSample *b, LweSample *c
 LweSample *multiplier_4_bits(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
 {
     // final array containing the result (8 bits max)
-    LweSample *z = new_LweSample_array(8, bk->params->in_out_params);
-    // temp values [4,4]
-    LweSample *temp[4];
-    for (int i = 0; i < 4; i++)
-    {
-        temp[i] = new_LweSample_array(4, bk->params->in_out_params);
-    }
-    // if we want to factorise operations, we might want to create an array of 3. (layer 1, 2, 3)
-    LweSample *carry = new_LweSample_array(4, bk->params->in_out_params);
-    // first carry initialised to 0
-    for (int i = 0; i < 4; i++)
-    {
-        bootsCONSTANT(carry + i, 0, bk);
-    }
-
-    for (int line = 0; line < 4; line++)
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            // computing each AND gate
-            bootsAND(temp[line] + i, a + i, b + line, bk);
-        }
-    }
-    // z0
-    bootsCOPY(z, &temp[0][0], bk);
-
-    // layer1
-    full_adder_one_bit(z + 1, &temp[1][0], &temp[0][1], carry + 1, bk);
-    full_adder_one_bit(z + 2, &temp[1][1], &temp[0][2], carry + 1, bk);
-    full_adder_one_bit(z + 3, &temp[1][2], &temp[0][3], carry + 1, bk);
-    full_adder_one_bit(z + 4, &temp[1][3], carry, carry + 1, bk);
-    // layer 2
-    full_adder_one_bit(z + 2, &temp[2][0], z + 2, carry + 2, bk);
-    full_adder_one_bit(z + 3, &temp[2][1], z + 3, carry + 2, bk);
-    full_adder_one_bit(z + 4, &temp[2][2], z + 4, carry + 2, bk);
-    full_adder_one_bit(z + 5, &temp[2][3], carry + 1, carry + 2, bk);
-    // layer3
-    full_adder_one_bit(z + 3, &temp[3][0], z + 3, carry + 3, bk);
-    full_adder_one_bit(z + 4, &temp[3][1], z + 4, carry + 3, bk);
-    full_adder_one_bit(z + 5, &temp[3][2], z + 5, carry + 3, bk);
-    full_adder_one_bit(z + 6, &temp[3][3], carry + 2, carry + 3, bk);
-
-    bootsCOPY(z + 7, carry + 3, bk);
+    LweSample *z = new_LweSample_array(16, bk->params->in_out_params);
+    // temp values [m,m], m = size of max(a,b)
+    LweSample *temp[8];
     for (int i = 0; i < 8; i++)
     {
-        bootsCOPY(&result[i], z + i, bk);
+        temp[i] = new_LweSample_array(8, bk->params->in_out_params);
     }
+    // if we want to factorise operations, we might want to create an array of 3. (layer 1, 2, 3)
+    LweSample *carry = new_LweSample_array(8, bk->params->in_out_params);
+
+    // first carry initialised to 0
+    for (int i = 0; i < 8; i++)
+        bootsCONSTANT(carry + i, 0, bk);
+
+    // computing each AND gate
+    for (int line = 0; line < 8; line++)
+        for (int i = 0; i < 8; i++)
+            bootsAND(temp[line] + i, a + i, b + line, bk);
+
+    // copying first 4 gates so that it can be looped afterwards
+    for (int i = 0; i < 8; i++)
+        bootsCOPY(z + i, &temp[0][i], bk);
+
+    // processing main calcul
+    for (int i = 0; i < 7; i++)
+    {
+        bootsCOPY(z + i + 8, carry + i, bk);
+        for (int k = 0; k < 8; k++)
+            full_adder_one_bit(z + k + i + 1, &temp[i + 1][k], z + k + i + 1, carry + i + 1, bk);
+    }
+
+    // cant fit int the loop
+    bootsCOPY(z + 15, carry + 7, bk);
+
+    // copying into result
+    for (int i = 0; i < 16; i++)
+        bootsCOPY(&result[i], z + i, bk);
 }
 
 int main()

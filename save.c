@@ -257,45 +257,46 @@ LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGat
  *
  * @return encrypted result
  * ***/
+
 LweSample *multiplier_4_bits(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
 {
     // final array containing the result (8 bits max)
-    LweSample *z = new_LweSample_array(8, bk->params->in_out_params);
-    // temp values [4,4]
-    LweSample *temp[4];
-    for (int i = 0; i < 4; i++)
+    LweSample *z = new_LweSample_array(16, bk->params->in_out_params);
+    // temp values [m,m], m = size of max(a,b)
+    LweSample *temp[8];
+    for (int i = 0; i < 8; i++)
     {
-        temp[i] = new_LweSample_array(4, bk->params->in_out_params);
+        temp[i] = new_LweSample_array(8, bk->params->in_out_params);
     }
     // if we want to factorise operations, we might want to create an array of 3. (layer 1, 2, 3)
-    LweSample *carry = new_LweSample_array(4, bk->params->in_out_params);
+    LweSample *carry = new_LweSample_array(8, bk->params->in_out_params);
 
     // first carry initialised to 0
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 8; i++)
         bootsCONSTANT(carry + i, 0, bk);
 
     // computing each AND gate
-    for (int line = 0; line < 4; line++)
-        for (int i = 0; i < 4; i++)
+    for (int line = 0; line < 8; line++)
+        for (int i = 0; i < 8; i++)
             bootsAND(temp[line] + i, a + i, b + line, bk);
 
     // copying first 4 gates so that it can be looped afterwards
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 8; i++)
         bootsCOPY(z + i, &temp[0][i], bk);
 
     // processing main calcul
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 7; i++)
     {
-        bootsCOPY(z + i + 4, carry + i, bk);
-        for (int k = 0; k < 4; k++)
+        bootsCOPY(z + i + 8, carry + i, bk);
+        for (int k = 0; k < 8; k++)
             full_adder_one_bit(z + k + i + 1, &temp[i + 1][k], z + k + i + 1, carry + i + 1, bk);
     }
 
     // cant fit int the loop
-    bootsCOPY(z + 7, carry + 3, bk);
+    bootsCOPY(z + 15, carry + 7, bk);
 
     // copying into result
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 16; i++)
         bootsCOPY(&result[i], z + i, bk);
 }
 
