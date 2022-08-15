@@ -46,7 +46,7 @@ LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, const TFheG
             full_adder_one_bit(z + k + i + 1, &temp[i + 1][k], z + k + i + 1, carry + i + 1, bk);
     }
 
-    // cant fit int the loop
+    // cant fit into the loop
     bootsCOPY(z + 15, carry + 7, bk);
 
     // copying into result

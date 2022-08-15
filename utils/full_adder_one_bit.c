@@ -16,7 +16,6 @@
  * ***/
 void full_adder_one_bit(LweSample *sum, LweSample *a, LweSample *b, LweSample *carry_in, const TFheGateBootstrappingCloudKeySet *bk)
 {
-
     const LweParams *in_out_params = bk->params->in_out_params;
     // carries & result & temp
     LweSample *temp = new_LweSample_array(3, in_out_params);
