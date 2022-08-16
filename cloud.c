@@ -11,7 +11,6 @@ void compare_bit(LweSample *result, const LweSample *a, const LweSample *b, cons
     bootsMUX(result, tmp, lsb_carry, a, bk);
 }
 
-// a1,a0 *b0
 LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk)
 {
     LweSample *offsetArray = new_gate_bootstrapping_ciphertext_array(16, bk->params);
@@ -67,48 +66,59 @@ void full_substract(LweSample *sum, const LweSample *x, const LweSample *y, cons
     delete_LweSample_array(2, carry);
 }
 
-void minimum(LweSample *result, const LweSample *a, const LweSample *b, const int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *tmps = new_gate_bootstrapping_ciphertext_array(2, bk->params);
-
-    // initialize the carry to 0
-    bootsCONSTANT(&tmps[0], 0, bk);
-    // run the elementary comparator gate n times
-    for (int i = 0; i < nb_bits; i++)
-    {
-        compare_bit(&tmps[0], &a[i], &b[i], &tmps[0], &tmps[1], bk);
-    }
-    // tmps[0] is the result of the comparaison: 0 if a is larger, 1 if b is larger
-    // select the max and copy it to the result
-    for (int i = 0; i < nb_bits; i++)
-    {
-        bootsMUX(&result[i], &tmps[0], &b[i], &a[i], bk);
-    }
-
-    delete_gate_bootstrapping_ciphertext_array(2, tmps);
-}
-
 LweSample *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, const TFheGateBootstrappingCloudKeySet *bk)
 {
-    LweSample *temp_result = new_gate_bootstrapping_ciphertext_array(16, bk);
-    LweSample *temp_dividende = new_gate_bootstrapping_ciphertext_array(16, bk);
-    LweSample *quotient = new_gate_bootstrapping_ciphertext_array(16, bk);
-    LweSample *zero = new_gate_bootstrapping_ciphertext_array(1, bk);
-    bootsCOPY(zero, 0, bk);
-    LweSample *one = new_gate_bootstrapping_ciphertext_array(1, bk);
-    bootsCOPY(one, 1, bk);
+    LweSample *temp_rest = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *rest = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *temp_dividende = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *temp_dividende_copy = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *quotient = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *zero = new_LweSample_array(1, bk->params->in_out_params);
+    bootsCONSTANT(zero, 0, bk);
+    LweSample *one = new_LweSample_array(1, bk->params->in_out_params);
+    bootsCONSTANT(one, 1, bk);
 
     // looping over 16 bits of dividende
     for (int i = 0; i < 16; i++)
     {
-        for (int j = 0; j < i; j++)
+        // initialisation
+        if (i == 0)
         {
-            bootsCOPY(temp_dividende + j, dividende + 16 - i - j, bk);
+            bootsCOPY(temp_dividende, dividende + 15, bk);
         }
 
-        full_substract(temp_result, temp_dividende, divisor, 16, bk);
+        full_substract(temp_rest, temp_dividende, divisor, 16, bk);
 
-        bootsMUX(quotient, temp_result + 15, zero, one, bk);
+        // the quotient is being added either 0 if dividende < divisor or 1 if opposite.
+        // we check the 15th bit of temp_rest: it is 0 if dividende < divisor or 1 if opposite
+        bootsMUX(quotient, temp_rest + 15, zero, one, bk);
+
+        // we offset by one the bit to change in quotient to modify its value.
+        offset(quotient, quotient, 1, bk);
+
+        // here we update temp_dividende's value
+        // two cases:
+        // 1 - either dividende < divisor then temp_dividende's value should be increased by one
+        // bit of the dividende
+        for (int j = 0; j < i; j++)
+        {
+            bootsCOPY(temp_dividende_copy + j, temp_dividende + j, bk);
+        }
+        bootsCOPY(temp_dividende_copy + i, dividende + 15 - i, bk);
+
+        // 2 - or dividende > divisor then temp_dividende's value should be = to temp_rest
+        // nothing to prepare here
+
+        // then we must choose whether to copy temp_dividende_copy or temp_rest to temp_dividende.
+
+        for (int j = 0; j < i; j++)
+        {
+            bootsMUX(temp_dividende + j, temp_rest + 15, temp_rest + j, temp_dividende_copy + j, bk);
+        }
+    }
+    for (int i = 0; i < 16; i++)
+    {
+        bootsCOPY(result + i, quotient + i, bk);
     }
 }
 
@@ -134,14 +144,13 @@ void compare_bit_own(LweSample *result, LweSample *a, LweSample *b, const TFheGa
 
 void test(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
 {
-    LweSample *temp = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *temp_dividende = new_LweSample_array(16, bk->params->in_out_params);
+    for (int i = 0; i < 16; i++)
+    {
+        bootsCONSTANT(temp_dividende + i, i, bk);
+    }
 
-    full_substract(temp, a, b, 16, bk);
-    // for (int i = 0; i < 16; i++)
-    // {
-    //     bootsCOPY(result + i, temp + i, bk);
-    // }
-    bootsCOPY(result, temp + 1, bk);
+    bootsMUX(result, &a[0], &b[3], &temp_dividende[2], bk);
 }
 
 int main()
