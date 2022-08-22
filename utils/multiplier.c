@@ -2,6 +2,7 @@
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
 #include <time.h>
+#include "./full_adder_one_bit.c"
 
 /***
  * can perform multiplication to 2 digits for a result of 15 bits max
