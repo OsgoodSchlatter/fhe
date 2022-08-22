@@ -84,6 +84,7 @@ LweSample *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, 
     LweSample *size_temp_dividende = new_LweSample_array(16, bk->params->in_out_params);
     LweSample *temp_dividende_copy = new_LweSample_array(16, bk->params->in_out_params);
     LweSample *quotient = new_LweSample_array(16, bk->params->in_out_params);
+    LweSample *temp_rest_lenght = new_LweSample_array(16, bk->params->in_out_params);
     LweSample *zero = new_LweSample_array(1, bk->params->in_out_params);
     bootsCONSTANT(zero, 0, bk);
     LweSample *one = new_LweSample_array(1, bk->params->in_out_params);
@@ -121,13 +122,16 @@ LweSample *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, 
         {
             bootsCOPY(temp_dividende_copy + j, temp_dividende + j, bk);
         }
-        // temp_dividende_copy + i is wrong, it should be + size of temp_dividende
-        bootsCOPY(temp_dividende_copy + i, dividende + 15 - i, bk);
+        // we offset by one bit temp_dividende_copy to cater dividende next bit
+        offset(temp_dividende_copy, temp_dividende_copy, 1, bk);
+        bootsCOPY(temp_dividende_copy, dividende + 15 - i, bk);
 
         // -------------CASE B---------------
-        // or temp_dividende > divisor then temp_dividende's value should be = to temp_rest
-        // nothing to prepare here
+        // here, temp_dividende > divisor then temp_dividende's value should be = to temp_rest
+        // we offset by one bit temp_rest to cater dividende next bit, just like before
 
+        offset(temp_rest, temp_rest, 1, bk);
+        bootsCOPY(temp_rest, dividende + 15 - i, bk);
         // then we must choose whether to copy temp_dividende_copy or temp_rest to temp_dividende.
 
         for (int j = 0; j < i; j++)
