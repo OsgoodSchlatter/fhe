@@ -2,6 +2,7 @@
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
 #include "./offset.c"
+#include "./full_subtract.c"
 
 /***
  * can perform euclidian division of 2 digits
