@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifndef adder
+#define adder
+
 /***
  * completes the truth table of three inputs (a,b,c_in)
  * helpful in multiplier
@@ -27,3 +30,5 @@ void full_adder_one_bit(LweSample *sum, LweSample *a, LweSample *b, LweSample *c
     bootsAND(temp + 2, carry_in, temp, bk);
     bootsOR(carry_in, temp + 1, temp + 2, bk);
 }
+
+#endif

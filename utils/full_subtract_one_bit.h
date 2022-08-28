@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifndef subtract
+#define subtract
+
 /***
  * completes the truth table of three inputs (a,b,c_in) for subtraction on one bit
  * helpful in multiplier
@@ -13,7 +16,7 @@
  *
  * @return subtract and carry_out
  * ***/
-void full_subtract_one_bit(LweSample *subtract, LweSample *a, LweSample *b, LweSample *carry_in, const TFheGateBootstrappingCloudKeySet *bk)
+void full_subtract_one_bit(LweSample *_subtract, LweSample *a, LweSample *b, LweSample *carry_in, const TFheGateBootstrappingCloudKeySet *bk)
 {
     const LweParams *in_out_params = bk->params->in_out_params;
     // carries & result & temp
@@ -26,7 +29,9 @@ void full_subtract_one_bit(LweSample *subtract, LweSample *a, LweSample *b, LweS
     bootsNOT(temp + 3, temp, bk);
     bootsAND(temp + 1, not_a, b, bk);
     // layer 2
-    bootsXOR(subtract, carry_in, temp, bk);
+    bootsXOR(_subtract, carry_in, temp, bk);
     bootsAND(temp + 2, carry_in, temp + 3, bk);
     bootsOR(carry_in, temp + 1, temp + 2, bk);
 }
+
+#endif

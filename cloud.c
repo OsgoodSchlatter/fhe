@@ -1,12 +1,15 @@
 #include <tfhe/tfhe.h>
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "./utils/multiplier.c"
-#include "./utils/diviser.c"
+#include "./utils/multiplier.h"
+#include "./utils/diviser.h"
+#include "./utils/full_adder.h"
+#include "./utils/full_subtract.h"
 
-int main()
+int main(int agrc, char **argv)
 {
     printf("reading the key...\n");
 
@@ -21,9 +24,8 @@ int main()
     printf("reading the input...\n");
 
     // receiving inputs from alice
-    int numInputs;
-    printf("input = \n");
-    scanf("%d", &numInputs);
+    int numInputs = strtol(argv[1], NULL, 10);
+    int choice = strtol(argv[2], NULL, 10);
     FILE *cloud_data = fopen("cloud.data", "rb");
     LweSample *ciphertexts[numInputs];
     for (int i = 0; i < numInputs; i++)
@@ -40,8 +42,27 @@ int main()
 
     // ----------------------------------------- //
 
-    // compare_bit_own(result, ciphertexts[0], ciphertexts[1], bk);
-    diviser(result, ciphertexts[0], ciphertexts[1], bk);
+    switch (choice)
+    {
+    case 1:
+        multiplier(result, ciphertexts[0], ciphertexts[1], bk);
+        break;
+
+    case 2:
+        diviser(result, ciphertexts[0], ciphertexts[1], bk);
+        break;
+
+    case 3:
+        full_adder(result, ciphertexts[0], ciphertexts[1], bk);
+        break;
+
+    case 4:
+        full_subtract(result, ciphertexts[0], ciphertexts[1], bk);
+        break;
+
+    default:
+        break;
+    }
 
     // ----------------------------------------- //
 

@@ -17,11 +17,11 @@ all: alice cloud verif
 	${CC} ${INCS} -c $<
 	${CC} -o $@ $@.o ${LIBS}
 
-utils:
-	gcc utils/full_adder_one_bit.c -o full_adder_one_bit -ltfhe-spqlios-fma
-	gcc utils/multiplier.c -o multiplier -ltfhe-spqlios-fma
-
 
 clean:
 	rm alice cloud verif alice.o cloud.o verif.o || true
 	rm cloud.key secret.key cloud.data answer.data || true
+
+# gcc utils/full_adder_one_bit.c -o full_adder_one_bit -ltfhe-spqlios-fma
+# gcc utils/multiplier.c -o multiplier -ltfhe-spqlios-fma
+# gcc utils/diviser.c -o diviser -ltfhe-spqlios-fma

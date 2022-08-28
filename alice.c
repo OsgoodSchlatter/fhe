@@ -2,8 +2,9 @@
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-int main()
+int main(int argc, char **argv)
 {
     // generate a keyset
     const int minimum_lambda = 110;
@@ -15,15 +16,18 @@ int main()
     TFheGateBootstrappingSecretKeySet *key = new_random_gate_bootstrapping_secret_keyset(params);
 
     // asking user values
-    printf("how many input you want ? \n");
-    int numInputs;
-    scanf("%d", &numInputs);
+    if (argc < 2)
+    {
+        printf("format should be ./alice <1st input> <2nd input> ... \n");
+        return -1;
+    }
+    int numInputs = argc - 1;
     int array[numInputs];
-    printf("values ? \n");
     for (int i = 0; i < numInputs; i++)
     {
-        scanf("%d", &array[i]);
+        array[i] = strtol(argv[i + 1], NULL, 10);
     }
+
     printf("your values are  \n");
     for (int i = 0; i < numInputs; i++)
     {

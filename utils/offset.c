@@ -1,7 +1,6 @@
 #include <tfhe/tfhe.h>
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
-#include <time.h>
 
 /***
  * can offset by *offset* bits an array of encrypted data
