@@ -1,4 +1,12 @@
-First, make sure that TFHE is installed, and that your environment 
+## FULLY HOMOMORPHIC ENCRYPTED CALCULATION TOOLS
+
+### Eloi Besnard, Tiphaine Henry
+
+Can perform addition, subtraction, multiplication and division with homomorphic encrypted data using TFHE library.
+
+# NOTICE
+
+First, make sure that TFHE is installed, and that your environment
 variables contains the
 necessary information to find TFHE include directory and library
 directory.
@@ -6,7 +14,7 @@ directory.
 During the compilation, `CPLUS_INCLUDE_PATH` and `C_INCLUDE_PATH` should
 contain `/usr/local/include` and `LIBRARY_PATH` and
 `LD_LIBRARY_PATH` should contain `/usr/local/lib`.
-During the execution of a program that uses TFHE, only the variable 
+During the execution of a program that uses TFHE, only the variable
 `LD_LIBRARY_PATH` is needed.
 
 You can put the following lines to your .bashrc or .profile config file
@@ -36,4 +44,3 @@ TFHE that you have installed (`-ltfhe-nayuki-portable`, `-ltfhe-nayuki-avx`,
 You can have a look at the Makefile for other compile options!
 
 Happy coding!
-
