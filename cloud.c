@@ -60,6 +60,10 @@ int main(int agrc, char **argv)
         full_subtract(result, ciphertexts[0], ciphertexts[1], bk);
         break;
 
+    case 5:
+        for (int i = 0; i < 16; i++)
+            bootsCOPY(result + i, ciphertexts[1] + i, bk);
+
     default:
         break;
     }

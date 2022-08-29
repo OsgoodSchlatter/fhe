@@ -38,6 +38,7 @@ int main()
         printf("%s\n", result);
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
+    printf("result : %d\n\n", int_result);
     assert(240 == int_result);
     printf("-------------------------\n");
     printf("test for multiplication was succesfully passed for round 1\n");
@@ -57,14 +58,17 @@ int main()
     printf("-------------------------\n \n");
 
     // test for addition
+    system("../alice 1020 5");
+
     system("../cloud 2 3");
     cmd = popen("../verif", "r");
     while (fgets(result, sizeof(result), cmd) != NULL)
         printf("%s\n", result);
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
+    printf("result : %d\n\n", int_result);
     assert(1025 == int_result);
-    printf("-------------------------\n\n");
+    printf("-------------------------\n");
     printf("test for addition was succesfully passed for round 1\n");
     printf("-------------------------\n\n");
 
@@ -76,7 +80,7 @@ int main()
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
     assert(1015 == int_result);
-    printf("-------------------------\n\n");
+    printf("-------------------------\n");
     printf("test for subtraction was succesfully passed for round 1\n");
     printf("-------------------------\n\n");
 
@@ -85,14 +89,14 @@ int main()
     // -------------------
 
     // test for multiplication
-    system("../alice 121 2");
+    system("../alice 255 107");
     system("../cloud 2 1");
     cmd = popen("../verif", "r");
     while (fgets(result, sizeof(result), cmd) != NULL)
         printf("%s\n", result);
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
-    assert(242 == int_result);
+    assert(27285 == int_result);
     printf("-------------------------\n");
     printf("test for multiplication was succesfully passed for round 2\n");
     printf("-------------------------\n\n");
@@ -106,7 +110,7 @@ int main()
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
     assert(47 == int_result);
-    printf("-------------------------\n\n");
+    printf("-------------------------\n");
     printf("test for division was succesfully passed for round 2\n");
     printf("-------------------------\n\n");
 
@@ -118,7 +122,7 @@ int main()
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
     assert(31291 == int_result);
-    printf("-------------------------\n\n");
+    printf("-------------------------\n");
     printf("test for addition was succesfully passed for round 2\n");
     printf("-------------------------\n\n");
 
@@ -130,7 +134,10 @@ int main()
     pclose(cmd);
     int_result = atoi(truncString(strdup(result), 19));
     assert(30001 == int_result);
-    printf("-------------------------\n\n");
+    printf("-------------------------\n");
     printf("test for subtraction was succesfully passed for round 2\n");
+    printf("-------------------------\n\n");
+    printf("-------------------------\n");
+    printf("END OF TESTS, 8/8 tests succesfully passed\n");
     printf("-------------------------\n\n");
 }

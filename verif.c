@@ -31,7 +31,7 @@ int main()
     }
 
     printf("And the result is: %d\n", int_answer);
-    return (11);
+    return (int_answer);
     printf("I hope you remember what was the question!\n");
 
     // clean up all pointers
