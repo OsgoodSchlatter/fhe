@@ -9,10 +9,6 @@ void addition_multiple(LweSample *result, LweSample *offers[], int offerNbr,
                        const TFheGateBootstrappingCloudKeySet *keyset)
 {
     const LweParams *in_out_params = keyset->params->in_out_params;
-    // carries
-    LweSample *carry = new_LweSample_array(2, in_out_params);
-    // bootsSymEncrypt(carry, 0, keyset); // first carry initialized to 0
-    bootsCONSTANT(carry, 0, keyset);
 
     LweSample *tmp = new_LweSample_array(16, in_out_params);
 

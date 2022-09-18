@@ -6,11 +6,12 @@
 #include <math.h>
 #include "./utils/multiplier.h"
 #include "./utils/diviser.h"
-#include "./utils/full_adder.h"
 #include "./utils/full_subtract.h"
+#include "./utils/addition_multiple.h"
 
 int main(int agrc, char **argv)
 {
+    printf("input should be ./cloud <number of inputs in alice.c> <choice of calculation>\n");
     printf("reading the key...\n");
 
     // reads the cloud key from file
@@ -53,7 +54,7 @@ int main(int agrc, char **argv)
         break;
 
     case 3:
-        full_adder(result, ciphertexts[0], ciphertexts[1], bk);
+        addition_multiple(result, ciphertexts, numInputs, bk);
         break;
 
     case 4:
