@@ -4,7 +4,7 @@
 #include <time.h>
 #include "./full_adder_one_bit.h"
 
-// performs substraction on two ciphered data MY VERSION
+// performs addition on two ciphered data MY VERSION
 void full_adder(LweSample *result, LweSample *x, LweSample *y,
                 const TFheGateBootstrappingCloudKeySet *keyset)
 {
