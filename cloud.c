@@ -6,7 +6,7 @@
 #include <math.h>
 #include "./utils/multiplier.h"
 #include "./utils/diviser.h"
-#include "./utils/full_subtract.h"
+#include "./utils/subtraction_multiple.h"
 #include "./utils/addition_multiple.h"
 
 int main(int agrc, char **argv)
@@ -58,7 +58,7 @@ int main(int agrc, char **argv)
         break;
 
     case 4:
-        full_subtract(result, ciphertexts[0], ciphertexts[1], bk);
+        subtraction_multiple(result, ciphertexts, numInputs, bk);
         break;
 
     case 5:

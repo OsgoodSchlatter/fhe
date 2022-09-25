@@ -1,5 +1,9 @@
 {
-    "files.associations": {
-        "tfhe_io.h": "c"
-    }
+  "files.associations": {
+    "tfhe_io.h": "c",
+    "*.tcc": "c",
+    "istream": "c",
+    "ostream": "c",
+    "functional": "c"
+  }
 }
