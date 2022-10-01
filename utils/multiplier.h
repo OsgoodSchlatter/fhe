@@ -13,42 +13,41 @@
  *
  * @return encrypted result
  * ***/
-LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, const TFheGateBootstrappingCloudKeySet *bk)
+LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, int nb_bits, const TFheGateBootstrappingCloudKeySet *bk)
 {
-    int max = 16;
     // final array containing the result (16 bits max, see result)
-    LweSample *z = new_LweSample_array(2 * max, bk->params->in_out_params);
+    LweSample *z = new_LweSample_array(2 * nb_bits, bk->params->in_out_params);
     // temp values [m,m], m = size of max(a,b)
-    LweSample *temp[max];
-    for (int i = 0; i < max; i++)
+    LweSample *temp[nb_bits];
+    for (int i = 0; i < nb_bits; i++)
     {
-        temp[i] = new_LweSample_array(max, bk->params->in_out_params);
+        temp[i] = new_LweSample_array(nb_bits, bk->params->in_out_params);
     }
     // if we want to factorise operations, we might want to create an array of 3. (layer 1, 2, 3)
-    LweSample *carry = new_LweSample_array(max, bk->params->in_out_params);
+    LweSample *carry = new_LweSample_array(nb_bits, bk->params->in_out_params);
 
     // first carry initialised to 0
-    for (int i = 0; i < max; i++)
+    for (int i = 0; i < nb_bits; i++)
         bootsCONSTANT(carry + i, 0, bk);
 
     // computing each AND gate
-    for (int line = 0; line < max; line++)
-        for (int row = 0; row < max; row++)
+    for (int line = 0; line < nb_bits; line++)
+        for (int row = 0; row < nb_bits; row++)
             bootsAND(temp[line] + row, a + row, b + line, bk);
 
     // copying first 8 AND gates (1st line) so that it can fit in the loop afterwards
-    for (int i = 0; i < max; i++)
+    for (int i = 0; i < nb_bits; i++)
         bootsCOPY(z + i, &temp[0][i], bk);
 
     // processing main calcul
-    for (int i = 1; i < max; i++)
+    for (int i = 1; i < nb_bits; i++)
     {
-        bootsCOPY(z + i + max - 1, carry + i, bk);
-        for (int k = 0; k < max; k++)
+        bootsCOPY(z + i + nb_bits - 1, carry + i, bk);
+        for (int k = 0; k < nb_bits; k++)
             full_adder_one_bit(z + k + i, &temp[i][k], z + k + i, carry + i, bk);
     }
 
     // copying into result
-    for (int i = 0; i < max; i++)
+    for (int i = 0; i < nb_bits; i++)
         bootsCOPY(&result[i], z + i, bk);
 }

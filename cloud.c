@@ -4,14 +4,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "./utils/multiplier.h"
+#include "./utils/multiplier_multiple.h"
 #include "./utils/diviser.h"
 #include "./utils/subtraction_multiple.h"
 #include "./utils/addition_multiple.h"
 
 int main(int agrc, char **argv)
 {
-    printf("input should be ./cloud <number of inputs in alice.c> <choice of calculation>\n");
+    printf("input should be ./cloud <number of inputs in alice.c> <choice of calculation> <optional: nb of bits>\n");
     printf("reading the key...\n");
 
     // reads the cloud key from file
@@ -27,6 +27,7 @@ int main(int agrc, char **argv)
     // receiving inputs from alice
     int numInputs = strtol(argv[1], NULL, 10);
     int choice = strtol(argv[2], NULL, 10);
+    int nb_bits = strtol(argv[3], NULL, 10);
     FILE *cloud_data = fopen("cloud.data", "rb");
     LweSample *ciphertexts[numInputs];
     for (int i = 0; i < numInputs; i++)
@@ -46,7 +47,7 @@ int main(int agrc, char **argv)
     switch (choice)
     {
     case 1:
-        multiplier(result, ciphertexts[0], ciphertexts[1], bk);
+        multiplier_multiple(result, ciphertexts, numInputs, nb_bits, bk);
         break;
 
     case 2:
