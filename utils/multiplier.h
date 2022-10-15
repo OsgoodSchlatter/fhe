@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "./full_adder_one_bit.h"
-
+#include <omp.h>
 /***
  * can perform multiplication to 2 digits for a result of 15 bits max
  * @arg result: result that will be deciphered
@@ -19,6 +19,8 @@ LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, int nb_bits
     LweSample *z = new_LweSample_array(2 * nb_bits, bk->params->in_out_params);
     // temp values [m,m], m = size of max(a,b)
     LweSample *temp[nb_bits];
+    omp_set_num_threads(4);
+#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < nb_bits; i++)
     {
         temp[i] = new_LweSample_array(nb_bits, bk->params->in_out_params);

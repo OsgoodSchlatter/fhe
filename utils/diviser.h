@@ -1,8 +1,9 @@
 #include <tfhe/tfhe.h>
 #include <tfhe/tfhe_io.h>
 #include <stdio.h>
-#include "./offset.c"
+#include "./offset.h"
 #include "./full_subtract.h"
+#include <omp.h>
 
 /***
  * can perform euclidian division of 2 digits
@@ -27,6 +28,8 @@ int *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, const 
     int iter = 16; // should be 16 when normal
 
     //  looping over 16 bits of dividende
+    // omp_set_num_threads(4);
+    // #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < iter; i++)
     {
         // initialisation

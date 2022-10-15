@@ -7,7 +7,7 @@ INCS=-I${TFHE_PREFIX}/include
 
 # if you haven't set your LIBRARY_PATH or LD_LIBRARY_PATH variables, 
 # you can pass them like this to the compiler
-LIBS=-L${TFHE_PREFIX}/lib -Wl,-rpath=${TFHE_PREFIX}/lib -ltfhe-spqlios-fma
+LIBS=-L${TFHE_PREFIX}/lib -Wl,-rpath=${TFHE_PREFIX}/lib -ltfhe-spqlios-fma -fopenmp
 
 all: alice cloud verif
 

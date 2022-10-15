@@ -5,14 +5,14 @@
 #include <time.h>
 #include <math.h>
 #include "./utils/multiplier_multiple.h"
-#include "./utils/diviser.h"
 #include "./utils/subtraction_multiple.h"
 #include "./utils/addition_multiple.h"
+#include "./utils/diviser_multiple.h"
 
 int main(int agrc, char **argv)
 {
-    printf("input should be ./cloud <number of inputs in alice.c> <choice of calculation> <optional: nb of bits>\n");
-    printf("reading the key...\n");
+    // printf("input should be ./cloud <number of inputs in alice.c> <choice of calculation> <optional: nb of bits>\n");
+    // printf("reading the key...\n");
 
     // reads the cloud key from file
     FILE *cloud_key = fopen("cloud.key", "rb");
@@ -22,12 +22,17 @@ int main(int agrc, char **argv)
     // if necessary, the params are inside the key
     const TFheGateBootstrappingParameterSet *params = bk->params;
 
-    printf("reading the input...\n");
+    // printf("reading the input...\n");
 
     // receiving inputs from alice
     int numInputs = strtol(argv[1], NULL, 10);
     int choice = strtol(argv[2], NULL, 10);
-    int nb_bits = strtol(argv[3], NULL, 10);
+    // by default, nb_bits is 16.
+    int nb_bits = 16;
+    if (argv[3])
+    {
+        nb_bits = strtol(argv[3], NULL, 10);
+    }
     FILE *cloud_data = fopen("cloud.data", "rb");
     LweSample *ciphertexts[numInputs];
     for (int i = 0; i < numInputs; i++)
@@ -51,7 +56,7 @@ int main(int agrc, char **argv)
         break;
 
     case 2:
-        diviser(result, ciphertexts[0], ciphertexts[1], bk);
+        diviser_multiple(result, ciphertexts, numInputs, bk);
         break;
 
     case 3:
@@ -70,12 +75,13 @@ int main(int agrc, char **argv)
         break;
     }
 
-    // ----------------------------------------- //
+    // ------------------------------------------ //
 
     time_t end_time = clock();
 
-    printf("......computation took: %f secs\n", (end_time - start_time) / pow(10, 6));
-    printf("writing the answer to file...\n");
+    // printf("......computation took: %f secs\n", (end_time - start_time) / pow(10, 6));
+    // printf("writing the answer to file...\n");
+    printf("%f\n", (end_time - start_time) / pow(10, 6));
 
     // export the 32 ciphertexts to a file (for the cloud)
     FILE *answer_data = fopen("answer.data", "wb");

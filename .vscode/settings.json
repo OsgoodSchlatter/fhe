@@ -4,6 +4,7 @@
     "*.tcc": "c",
     "istream": "c",
     "ostream": "c",
-    "functional": "c"
+    "functional": "c",
+    "subtraction_multiple.h": "c"
   }
 }
