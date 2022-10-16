@@ -19,8 +19,10 @@ LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, int nb_bits
     LweSample *z = new_LweSample_array(2 * nb_bits, bk->params->in_out_params);
     // temp values [m,m], m = size of max(a,b)
     LweSample *temp[nb_bits];
-    omp_set_num_threads(4);
-#pragma omp parallel for schedule(dynamic)
+
+    int n_threads = 4;
+#pragma omp parallel num_threads(n_threads)
+#pragma omp for schedule(static)
     for (int i = 0; i < nb_bits; i++)
     {
         temp[i] = new_LweSample_array(nb_bits, bk->params->in_out_params);
@@ -29,19 +31,27 @@ LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, int nb_bits
     LweSample *carry = new_LweSample_array(nb_bits, bk->params->in_out_params);
 
     // first carry initialised to 0
+
+#pragma omp for schedule(static)
     for (int i = 0; i < nb_bits; i++)
         bootsCONSTANT(carry + i, 0, bk);
 
-    // computing each AND gate
+        // computing each AND gate
+
+#pragma omp for schedule(static)
     for (int line = 0; line < nb_bits; line++)
         for (int row = 0; row < nb_bits; row++)
             bootsAND(temp[line] + row, a + row, b + line, bk);
 
-    // copying first 8 AND gates (1st line) so that it can fit in the loop afterwards
+            // copying first 8 AND gates (1st line) so that it can fit in the loop afterwards
+
+#pragma omp for schedule(static)
     for (int i = 0; i < nb_bits; i++)
         bootsCOPY(z + i, &temp[0][i], bk);
 
-    // processing main calcul
+        // processing main calcul
+
+#pragma omp for schedule(static)
     for (int i = 1; i < nb_bits; i++)
     {
         bootsCOPY(z + i + nb_bits - 1, carry + i, bk);
@@ -50,6 +60,8 @@ LweSample *multiplier(LweSample *result, LweSample *a, LweSample *b, int nb_bits
     }
 
     // copying into result
+
+#pragma omp for schedule(static)
     for (int i = 0; i < nb_bits; i++)
         bootsCOPY(&result[i], z + i, bk);
 }
