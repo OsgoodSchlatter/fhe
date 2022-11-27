@@ -22,6 +22,9 @@ int *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, const 
     LweSample *temp_dividende_copy = new_LweSample_array(16, bk->params->in_out_params);
     LweSample *quotient = new_LweSample_array(16, bk->params->in_out_params);
     LweSample *zero = new_LweSample_array(1, bk->params->in_out_params);
+    // the value which will be equal to the last bit of the rest.
+    LweSample *pivot = new_LweSample_array(1, bk->params->in_out_params);
+
     bootsCONSTANT(zero, 0, bk);
     LweSample *one = new_LweSample_array(1, bk->params->in_out_params);
     bootsCONSTANT(one, 1, bk);
@@ -42,9 +45,12 @@ int *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, const 
         // here we substract our running dividende by the divisor, at each loop
         full_subtract(temp_rest, temp_dividende, divisor, bk);
 
+        // getting the last bit of temp_rest, which will be used in BootsMux
+        bootsCOPY(pivot, temp_rest + iter - 1, bk);
+
         // the quotient is being added either 0 if dividende < divisor or 1 if opposite.
         // we check the 15th bit of temp_rest: it is 0 if dividende < divisor or 1 if opposite
-        bootsMUX(quotient, temp_rest + iter - 1, zero, one, bk);
+        bootsMUX(quotient, pivot, zero, one, bk);
 
         // we offset by one the bit to change in quotient to modify its value.
         offset(quotient, quotient, 1, bk);
@@ -73,13 +79,13 @@ int *diviser(LweSample *result, LweSample *dividende, LweSample *divisor, const 
         // we still choose based on the value of the 15th bit of temp_rest
         for (int j = 0; j < i; j++)
         {
-            bootsMUX(temp_dividende + j, temp_rest + iter - 1, temp_dividende_copy + j, temp_rest + j, bk);
+            bootsMUX(temp_dividende + j, pivot, temp_dividende_copy + j, temp_rest + j, bk);
         }
     }
 
     // we subtract one last time and change the quotient accordingly.
     full_subtract(temp_rest, temp_dividende, divisor, bk);
-    bootsMUX(quotient, temp_rest + iter - 1, zero, one, bk);
+    bootsMUX(quotient, pivot, zero, one, bk);
 
     // finally, we copy the quotient into the result, to be decrypted
     for (int i = 0; i < iter; i++)
