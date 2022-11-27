@@ -1,10 +1,36 @@
-## FULLY HOMOMORPHIC ENCRYPTED CALCULATION TOOLS
+# FULLY HOMOMORPHIC ENCRYPTED CALCULATION TOOLS
 
-### Eloi Besnard, Tiphaine Henry
+## Authors: Eloi Besnard, Tiphaine Henry
 
 Can perform addition, subtraction, multiplication and division with homomorphic encrypted data using TFHE library.
 
-# NOTICE
+## Usage
+
+Run `make`.  
+If problems, see Notice.
+
+- I. [CIPHERING]  
+   call alice with the numbers you want to cipher.  
+  Say you want to multiply 67 times 8 times 6, run:
+  ` ./alice 67 8 6`
+- II. [COMPUTING]  
+  call cloud to choose the computation you want to do. Dont forget to tell the number of inputs.  
+   Here is the format: ` ./cloud <number of inputs> <choice of computation>`  
+   Choice of computation is the following:
+
+       - 1: multiplication
+       - 2: division
+       - 3: addition
+       - 4: subtraction
+
+  In our case, we want to multiply 3 inputs so:
+  `./cloud 3 1 `
+
+- III. [DECIPHERING]  
+  Then, once cloud is done, run verif to decipher the data:
+  `./verif`
+
+## NOTICE
 
 First, make sure that TFHE is installed, and that your environment
 variables contains the
