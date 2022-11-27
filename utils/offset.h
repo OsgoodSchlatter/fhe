@@ -11,21 +11,4 @@
  *
  * @return encrypted offset array (i.e. var result)
  * ***/
-LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk)
-{
-    LweSample *offsetArray = new_gate_bootstrapping_ciphertext_array(16, bk->params);
-    for (int i = 0; i < offset; i++)
-    {
-        bootsCONSTANT(&offsetArray[i], 0, bk);
-    }
-
-    for (int i = 0; i < 16 - offset; i++)
-    {
-        bootsCOPY(&offsetArray[i + offset], &input[i], bk);
-    }
-
-    for (int i = 0; i < 16; i++)
-    {
-        bootsCOPY(&result[i], &offsetArray[i], bk);
-    }
-}
+LweSample *offset(LweSample *result, LweSample *input, int offset, const TFheGateBootstrappingCloudKeySet *bk);

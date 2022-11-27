@@ -31,6 +31,7 @@ int main()
     int int_result;
     FILE *cmd;
     // test for multiplication
+    system("echo doudou");
     system("../alice 120 2");
     system("../cloud 2 1");
     cmd = popen("../verif", "r");
@@ -72,7 +73,7 @@ int main()
     printf("test for addition was succesfully passed for round 1\n");
     printf("-------------------------\n\n");
 
-    // test for division
+    // test for subtraction
     system("../cloud 2 4");
     cmd = popen("../verif", "r");
     while (fgets(result, sizeof(result), cmd) != NULL)
