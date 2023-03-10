@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     TFheGateBootstrappingSecretKeySet *key = new_random_gate_bootstrapping_secret_keyset(params);
 
     // asking user values
-    if (argc < 2)
+    if (argc < 3)
     {
         printf("format should be ./alice <1st input> <2nd input> ... \n");
         return -1;
