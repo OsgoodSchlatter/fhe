@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include "./utils/multiplier_multiple.h"
-#include "./utils/subtraction_multiple.h"
-#include "./utils/addition_multiple.h"
-#include "./utils/diviser_multiple.h"
+#include "utils/multiplier_multiple.h"
+#include "utils/subtraction_multiple.h"
+#include "utils/addition_multiple.h"
+#include "utils/diviser_multiple.h"
+#include "utils/max_multiple.h"
 
 int main(int agrc, char **argv)
 {
@@ -68,6 +69,10 @@ int main(int agrc, char **argv)
         break;
 
     case 5:
+        max_multiple(result, ciphertexts, numInputs, bk);
+        break;
+
+    case 6:
         for (int i = 0; i < 16; i++)
             bootsCOPY(result + i, ciphertexts[1] + i, bk);
 

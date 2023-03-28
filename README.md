@@ -22,6 +22,7 @@ If problems, see Notice.
        - 2: division
        - 3: addition
        - 4: subtraction
+       - 5: max
 
   In our case, we want to multiply 3 inputs so:
   `./cloud 3 1 `

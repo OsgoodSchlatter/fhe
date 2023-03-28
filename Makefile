@@ -17,7 +17,7 @@ all: alice cloud verif
 	${CC} ${INCS} -c $<
 	${CC} -o $@ $@.o ${UTILS} ${LIBS}
 
-UTILS= addition_multiple.o compare_bit_own.o diviser_multiple.o diviser.o full_adder_one_bit.o full_adder.o full_subtract_one_bit.o full_subtract.o multiplier_multiple.o multiplier.o offset.o subtraction_multiple.o
+UTILS= addition_multiple.o compare_bit_own.o diviser_multiple.o diviser.o full_adder_one_bit.o full_adder.o full_subtract_one_bit.o full_subtract.o multiplier_multiple.o multiplier.o offset.o subtraction_multiple.o max_multiple.o
 
 utils:${UTILS}
 
