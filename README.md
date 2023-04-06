@@ -2,7 +2,7 @@
 
 ## Authors: Eloi Besnard, Tiphaine Henry
 
-Can perform addition, subtraction, multiplication and division with homomorphic encrypted data using TFHE library. See more explaination on my work at https://www.osgood-on-the-web.ml/cryptography/1.
+Can perform addition, subtraction, multiplication, max and division with homomorphic encrypted data using TFHE library. See more explaination on my work at https://www.osgood-on-the-web.ml/cryptography/1.
 See more explaination about FHE at https://www.zama.ai/post/tfhe-deep-dive-part-1.
 
 ## Usage
