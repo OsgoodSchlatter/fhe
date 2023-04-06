@@ -2,7 +2,8 @@
 
 ## Authors: Eloi Besnard, Tiphaine Henry
 
-Can perform addition, subtraction, multiplication and division with homomorphic encrypted data using TFHE library.
+Can perform addition, subtraction, multiplication and division with homomorphic encrypted data using TFHE library. See more explaination on my work at https://www.osgood-on-the-web.ml/cryptography/1.
+See more explaination about FHE at https://www.zama.ai/post/tfhe-deep-dive-part-1.
 
 ## Usage
 
@@ -19,7 +20,7 @@ If problems, see Notice.
    Choice of computation is the following:
 
        - 1: multiplication
-       - 2: division
+       - 2: division (only works with positive integers)
        - 3: addition
        - 4: subtraction
        - 5: max
@@ -30,6 +31,12 @@ If problems, see Notice.
 - III. [DECIPHERING]  
   Then, once cloud is done, run verif to decipher the data:
   `./verif`
+
+## TODO:
+
+- need to pass as argument the number of bits we want to perform computation with.
+- problem of MSB used for MUX
+- make anything using MUX work with negative integers
 
 ## NOTICE
 
